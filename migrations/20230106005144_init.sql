@@ -17,7 +17,9 @@ create table device (
 create table property (
     device_pubkey                   bytea references device on delete cascade,
     property_name                   text not null,
-    property_value                  json not null
+    property_value                  json not null,
+    unique(device_pubkey, property_name)
+
 );
 
 create table link_account_account (
