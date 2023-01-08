@@ -111,9 +111,11 @@ pub async fn put_data(mut req: Request<()>) -> tide::Result {
             for (k, v) in properties {
                 query!(
                     r#"
-                    update property
+                    insert into property(device_pubkey, property_name, property_value)
+                    values($1, $2, $3)
+                    on conflict (device_pubkey, property_name)
+                    do update
                     set property_value = $3
-                    where property_name = $2 and device_pubkey = $1
                     "#,
                     pubkey,
                     k,
@@ -133,7 +135,7 @@ pub async fn wait_data(req: Request<()>) -> tide::Result {
             .body(serde_json::to_value(values)?)
             .build())
     } else {
-        Ok(Response::builder(401).build())
+        Ok(Response::builder(400).build())
     }
 }
 pub async fn put_local_ip(mut req: Request<()>) -> tide::Result {
