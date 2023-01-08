@@ -11,17 +11,13 @@ async fn main() -> anyhow::Result<()> {
     let mut server = tide::new();
 
     server.at("/device/new").post(remote::new_device);
+    server.at("/device/:device/schema").post(remote::put_schema);
     server
-        .at("/device/{device}/schema")
-        .post(remote::put_schema);
-    server
-        .at("/device/{device}/local_ip")
+        .at("/device/:device/local_ip")
         .post(remote::put_local_ip);
+    server.at("/device/:device/data/set").post(remote::put_data);
     server
-        .at("/device/{device}/data/set")
-        .post(remote::put_data);
-    server
-        .at("/device/{device}/data/wait")
+        .at("/device/:device/data/wait")
         .post(remote::wait_data);
 
     server.at("/api/account/new").post(api::create_account);
