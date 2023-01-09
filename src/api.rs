@@ -367,3 +367,41 @@ pub async fn accept_device(mut req: Request<()>) -> tide::Result {
         ApiResult::failure("Invalid Input", ()).into()
     }
 }
+pub async fn set_title(mut req: Request<()>) -> tide::Result {
+    #[derive(Deserialize)]
+    struct Input {
+        username: String,
+        password: String,
+        device: String,
+        title: String,
+    }
+
+    if let Ok(Input {
+        username,
+        password,
+        device,
+        title,
+    }) = req.body_json().await
+    {
+        if let Ok(pubkey) = device.from_base58() {
+            if let Some(account) = db_get_account(&username).await? {
+                if account.valid_password(&password) {
+                    if let Some(device) = db_get_device(&username, &pubkey).await? {
+                        db_device_new_title(&username, &pubkey, &title).await?;
+                        ApiResult::success("", device.device_local_ip).into()
+                    } else {
+                        ApiResult::failure("Device not found", ()).into()
+                    }
+                } else {
+                    ApiResult::failure("Password incorrect", ()).into()
+                }
+            } else {
+                ApiResult::failure("Account not found", ()).into()
+            }
+        } else {
+            ApiResult::failure("Invalid Input", ()).into()
+        }
+    } else {
+        ApiResult::failure("Invalid Input", ()).into()
+    }
+}

@@ -127,6 +127,25 @@ pub async fn db_accept_device(username: &str, pubkey: &[u8]) -> Result<()> {
     .await?;
     Ok(())
 }
+pub async fn db_device_new_title(username: &str, pubkey: &[u8], title: &str) -> Result<()> {
+    query!(
+        r#"
+        update device 
+        set device_title = $3 
+        where device_pubkey = $2 and 0 < (
+            select count(*) from device
+            join link_account_device
+            on link_account_device.device_pubkey = device.device_pubkey
+            where account_username = $1 and device.device_pubkey = $2
+            )"#,
+        username,
+        pubkey,
+        title
+    )
+    .execute(&*DB)
+    .await?;
+    Ok(())
+}
 pub async fn db_create_account(
     username: &str,
     password: &str,

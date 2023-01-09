@@ -18,14 +18,8 @@ pub async fn set_wait(device: &[u8], properties: BTreeMap<String, Value>) {
         .or_default()
         .extend(properties);
 }
-async fn wait(device: &[u8]) -> BTreeMap<String, Value> {
-    loop {
-        if let Some(ret) = WAITER.lock().await.remove(device) {
-            break ret;
-        } else {
-            async_std::task::sleep(Duration::from_millis(500)).await;
-        }
-    }
+async fn wait(device: &[u8]) -> Option<BTreeMap<String, Value>> {
+    WAITER.lock().await.remove(device)
 }
 pub async fn new_device(mut req: Request<()>) -> tide::Result {
     #[derive(Deserialize)]
@@ -49,7 +43,10 @@ pub async fn new_device(mut req: Request<()>) -> tide::Result {
                 r#"
                 insert into device (device_pubkey, device_accepted, device_title, device_local_ip, device_schema)
                 values($1, $2, $3, $4, $5)
-                on conflict do nothing;
+                on conflict (device_pubkey)
+                do update 
+                set device_title = $3, device_local_ip = $4, device_schema = $5
+                ;
             "#,
                 pubkey,
                 false,
@@ -63,7 +60,7 @@ pub async fn new_device(mut req: Request<()>) -> tide::Result {
                 r#"
                     insert into link_account_device(account_username, device_pubkey)
                     values ($1, $2)
-                    on conflict do nothing
+                    on conflict (account_username, device_pubkey) do nothing
                 "#,
                 username,
                 pubkey

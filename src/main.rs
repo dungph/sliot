@@ -25,8 +25,9 @@ async fn main() -> anyhow::Result<()> {
     server.at("/api/account/new_password").post(api::chpasswd);
     server.at("/api/list_device").post(api::list_device);
     server.at("/api/list_account").post(api::list_account);
-    server.at("/api/local_ip").post(api::get_local_ip);
-    server.at("/api/schema").post(api::get_schema);
+    server.at("/api/device/local_ip").post(api::get_local_ip);
+    server.at("/api/device/title/new").post(api::set_title);
+    server.at("/api/device/schema").post(api::get_schema);
     server.at("/api/property/get").post(api::get_properties);
     server.at("/api/property/set").post(api::set_properties);
 
